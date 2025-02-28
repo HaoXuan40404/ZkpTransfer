@@ -6,7 +6,7 @@ dirpath="$(cd "$(dirname "$0")" && pwd)"
 cd $dirpath
 
 # JAVA_HOME="/nemo/jdk8"
-APP_MAIN=com.webank.ppc.iss.PpcIssApplication
+APP_MAIN=com.webank.wedpr.zktransfer.PpcIssApplication
 CURRENT_DIR=`pwd`
 CONF_DIR=${CURRENT_DIR}/conf
 
