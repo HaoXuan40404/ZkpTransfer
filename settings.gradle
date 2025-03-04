@@ -1,2 +1,2 @@
 rootProject.name = 'bcos-zktransfer'
-include 'contracts'
+// include 'contracts'

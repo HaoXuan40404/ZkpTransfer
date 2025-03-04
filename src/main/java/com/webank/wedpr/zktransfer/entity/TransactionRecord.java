@@ -1,7 +1,8 @@
+package com.webank.wedpr.zktransfer.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity

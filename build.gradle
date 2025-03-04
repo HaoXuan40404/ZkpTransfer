@@ -3,14 +3,9 @@ apply plugin: 'java'
 apply plugin: 'idea'
 //apply plugin: 'eclipse'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 
-version = '20240801'
-
-def springboot_version = "2.7.18"
+def springboot_version = "3.2.0"
 
 List springboot = [
         "org.springframework.boot:spring-boot-starter-web:$springboot_version",
@@ -21,10 +16,6 @@ List springboot = [
 ]
 
 repositories {
-    // maven {
-    //     url = "http://maven.weoa.com/nexus/content/groups/public/"
-    //     allowInsecureProtocol = true
-    // }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
     maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
@@ -47,13 +38,9 @@ dependencies {
     implementation 'commons-io:commons-io:2.7'
     implementation 'junit:junit:4.13.1'
     implementation 'com.jayway.jsonpath:json-path:2.9.0'
-    implementation 'net.javacrumbs.shedlock:shedlock-spring:4.47.0'
-    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:4.47.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.18'
 
 
-    // 使用druid守护线程
-    implementation 'com.alibaba:druid:1.2.20'
 }
 
 configurations.all {

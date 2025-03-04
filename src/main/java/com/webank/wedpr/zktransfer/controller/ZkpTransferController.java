@@ -2,7 +2,6 @@ package com.webank.wedpr.zktransfer.controller;
 
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.message.*;
-import com.webank.wedpr.zktransfer.service.PpcService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/wedpr/zktransfer/")
 public class ZkpTransferController {
-
-    @Autowired private PpcService ppcService;
 
     private void setSuccessMsg(BaseResponse response) {
         response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());

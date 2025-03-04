@@ -28,7 +28,7 @@ public class ContractConfig {
         System.out.println("zkp contract address:" + zkpContractAddress);
         log.info("zkp contract address:{}", zkpContractAddress);
         ZkTransfer zkpTransfer =
-        ZkTransfer.load(zkpContractAddress, client, client.getCryptoSuite().getCryptoKeyPair());
+            ZkTransfer.load(zkpContractAddress, client, client.getCryptoSuite().getCryptoKeyPair());
         FiscoBcosClient fiscoBcosClient = new FiscoBcosClient(zkpTransfer);
         log.debug(
                 "Account private key:{}",

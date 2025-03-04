@@ -5,17 +5,16 @@
 		<!-- log level -->
 		<Property name="LOG_LEVEL">info</Property>
 		<!-- log location -->
-		<!-- <Property name="LOG_HOME">./logs</Property> -->
-		<Property name="LOG_HOME">/data/app/logs/ppcs-modeladm</Property>
+		 <Property name="LOG_HOME">./logs</Property>
 		<!-- log name -->
-		<Property name="APP_NAME">ppcs-modeladm-sync</Property>
-		<property name="MONITOR_LOG_PATTERN" value="[%-p][%d{yyyy-MM-dd HH:mm:ss sss}][%-t][${sys:PID}][PPCS-MODELADM][4346][%F:%L][%m]%n"/>
+		<Property name="APP_NAME">zktransfer</Property>
+		<property name="MONITOR_LOG_PATTERN" value="[%-p][%d{yyyy-MM-dd HH:mm:ss sss}][%-t][${sys:PID}][ZKTRANSFER][1234][%F:%L][%m]%n"/>
 	</Properties>
 
 	<Appenders>
 		<RollingFile name="appLog" fileName="${LOG_HOME}/${APP_NAME}.log"
 					 filePattern="${LOG_HOME}/${APP_NAME}.log.%d{yyyy-MM-dd}.%i.log.gz">
-			<PatternLayout pattern="[%-p][%d{yyyy-MM-dd HH:mm:ss sss}][%-t][${sys:PID}][PPCS-MODELADM][4346][%F:%L][%m]%n"/>
+			<PatternLayout pattern="[%-p][%d{yyyy-MM-dd HH:mm:ss sss}][%-t][${sys:PID}][ZKTRANSFER][1234][%F:%L][%m]%n"/>
 			<Filters>
 				<ThresholdFilter level="warning" onMatch="DENY" onMismatch="NEUTRAL"/>
 				<ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>

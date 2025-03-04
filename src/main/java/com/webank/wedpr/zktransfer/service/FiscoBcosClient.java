@@ -21,8 +21,10 @@ public class FiscoBcosClient {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private Client client;
-    @Autowired
+
+//    @Autowired
     // private CryptoConfig cryptoConfig;
+
     private final ZkTransfer zkTransfer;
 
     public FiscoBcosClient(ZkTransfer _zkTransfer) {
