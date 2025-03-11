@@ -25,7 +25,7 @@ server.port=5840
     * cryptoMaterial.certPath设为conf
 
 - System configuration配置部分，需要配置：
-    * system.hexPrivateKey是16进制的私钥明文，可运行测试用例中的[keyGeneration](src/test/java/org/example/demo/Demos.java)生成。该配置允许为空，此时系统会随机生成一个私钥。
+    * system.hexPrivateKey是16进制的私钥明文，可运行测试用例中的[keyGeneration](coordinator-service/src/test/java/org/example/demo/Demos.java)生成。该配置允许为空，此时系统会随机生成一个私钥。
     * system.groupId设为目标群组，默认为"group0"
     
 - 访问api地址：
