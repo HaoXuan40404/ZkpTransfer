@@ -131,8 +131,8 @@ public class ZkpDemo {
             inputCommitments.add(zkp.computeCommitment(senderValues[i], senderBlindings[i]).expectNoError().commitment);
         }
 
-        for (int i = 0; i < inputCommitments.size(); i++) {
-            System.out.println("inputCommitments: " + HexFormat.of().formatHex(inputCommitments.get(i)));
+        for (byte[] inputCommitment : inputCommitments) {
+            System.out.println("inputCommitments: " + HexFormat.of().formatHex(inputCommitment));
         }
 
         byte[] outputCommitment = zkp.computeCommitment(receiverValues[0], receiverBlindings[0]).expectNoError().commitment;

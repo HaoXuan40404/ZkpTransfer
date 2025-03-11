@@ -1,4 +1,4 @@
-package com.webank.wedpr.zktransfer.message.amop;
+package com.webank.wedpr.zktransfer.message;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

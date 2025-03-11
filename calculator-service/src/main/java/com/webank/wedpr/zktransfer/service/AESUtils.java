@@ -8,6 +8,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.security.*;
 
 /**
@@ -17,6 +18,16 @@ public class AESUtils {
 
     private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
     private static final String KEY_ALGORITHM = "AES";
+
+    public static byte[] intToBytes(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4); // 分配 4 字节的缓冲区（int 占 4 字节）
+        buffer.putInt(value);                       // 写入 int 值
+        return buffer.array();                      // 返回字节数组
+    }
+
+    public static int bytesToInt(byte[] value) {
+        return ByteBuffer.wrap(value).getInt();
+    }
 
     private static SecretKeySpec getSecretKey(byte[] key) throws NoSuchAlgorithmException {
         MessageDigest sha = MessageDigest.getInstance("SHA-256");

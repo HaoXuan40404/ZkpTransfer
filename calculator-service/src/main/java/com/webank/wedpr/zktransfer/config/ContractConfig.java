@@ -23,14 +23,6 @@ public class ContractConfig {
 
     @Autowired private Client client;
 
-    @Bean
-    public byte[] servicePrivateKey()
-    {
-        System.out.println("servicePrivateKey:" + agencyPrivateKey);
-        return Hex.decode(agencyPrivateKey);
-    }
-
-
     // TODO: 扩充成多个 针对数据集 算法之类的，加载密钥
     // TODO: 这里做成map，key是群组id，通过群组id得到对应的client
     @Bean

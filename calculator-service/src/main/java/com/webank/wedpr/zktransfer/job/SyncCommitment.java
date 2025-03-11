@@ -43,11 +43,11 @@ public class SyncCommitment {
             if(maxIndexCommitmentOpt.isPresent())
             {
                 currentIndex = maxIndexCommitmentOpt.get().getIndex();
+                currentIndex++;
             }
             log.info("Current index: {}", currentIndex);
             byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, currentIndex);
             byte[] viewKey = nativeInterface.computeViewkey(indexBlinding).expectNoError().viewkey;
-            currentIndex++;
             byte[] valueCipher = chainService.getCipherByViewKey(viewKey);
             // 未查询到 表示已经同步完毕
             if(valueCipher.length == 0) {
@@ -58,7 +58,7 @@ public class SyncCommitment {
             byte[] valueBytes = AESUtils.decrypt(valueCipher, servicePrivateKey);
 
             // Convert valueBytes to int
-            int value = ByteBuffer.wrap(valueBytes).getInt();
+            int value = AESUtils.bytesToInt(valueBytes);
             // 计算生成commitment
             byte[] commitment = nativeInterface.computeCommitment(value, indexBlinding).expectNoError().commitment;
             int commitmentStatus = chainService.getCommitmentStatus(commitment);

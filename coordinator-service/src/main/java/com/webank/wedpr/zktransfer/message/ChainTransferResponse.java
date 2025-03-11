@@ -3,8 +3,7 @@ package com.webank.wedpr.zktransfer.message;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@Data
 @EqualsAndHashCode(callSuper=false)
-public class DepositRequest {
-    private int amount;
+@Data
+public class ChainTransferResponse extends BaseResponse {
 }

@@ -1,13 +1,12 @@
-package com.webank.wedpr.zktransfer.message.amop;
-
-import com.webank.wedpr.zktransfer.message.BaseResponse;
+package com.webank.wedpr.zktransfer.message.coordinator;
 
 import lombok.Data;
+import com.webank.wedpr.zktransfer.message.BaseResponse;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class ChainWithdrawResponse extends BaseResponse {
+public class ChainDepositResponse extends BaseResponse {
     private String txHash;
     private long blockNumber;
     private String status;

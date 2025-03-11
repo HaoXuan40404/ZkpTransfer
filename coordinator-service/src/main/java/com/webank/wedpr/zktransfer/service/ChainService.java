@@ -1,13 +1,9 @@
 package com.webank.wedpr.zktransfer.service;
 
+import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.common.PpcException;
-import com.webank.wedpr.zktransfer.message.amop.ChainDepositRequest;
-import com.webank.wedpr.zktransfer.message.amop.ChainDepositResponse;
-import com.webank.wedpr.zktransfer.message.amop.ChainTransferRequest;
-import com.webank.wedpr.zktransfer.message.amop.ChainTransferResponse;
-import com.webank.wedpr.zktransfer.message.amop.ChainWithdrawRequest;
-import com.webank.wedpr.zktransfer.message.amop.ChainWithdrawResponse;
+import com.webank.wedpr.zktransfer.message.*;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,69 +18,54 @@ public class ChainService {
     @Autowired
     private FiscoBcosClient fiscoBcosClient;
 
+    private void setSuccessMsg(BaseResponse response) {
+        response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
+        response.setMessage(EnumResponseStatus.SUCCESS.getMessage());
+    }
+
+    private void setErrorMsg(BaseResponse response) {
+        response.setErrorCode(EnumResponseStatus.FAILURE.getErrorCode());
+        response.setMessage(EnumResponseStatus.FAILURE.getMessage());
+    }
+
     @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public ChainDepositResponse deposit(ChainDepositRequest request) throws PpcException {
+    public ChainDepositResponse deposit(ChainDepositRequest request) throws WedprException {
         ChainDepositResponse response = new ChainDepositResponse();
         try {
-            String txHash = fiscoBcosClient.mint(request.getCommitment(), request.getViewKey(), request.getCipher());
-            response.setTxHash(txHash);
-            response.setBlockNumber(0); // You need to get the block number from the transaction receipt
-            response.setStatus("success");
+            fiscoBcosClient.mint(request.getCommitment(), request.getViewKey(), request.getCipher());
+            setSuccessMsg(response);
         } catch (ContractException e) {
             log.error("Error during deposit: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
+            setSuccessMsg(response);
         }
         return response;
     }
 
     @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public ChainWithdrawResponse withdraw(ChainWithdrawRequest request) throws PpcException {
+    public ChainWithdrawResponse withdraw(byte[] proof, byte[] commitment) throws WedprException {
         ChainWithdrawResponse response = new ChainWithdrawResponse();
         try {
-            String txHash = fiscoBcosClient.burn(request.getProof(), request.getCommitment());
-            response.setTxHash(txHash);
-            response.setBlockNumber(0); // You need to get the block number from the transaction receipt
-            response.setStatus("success");
+            fiscoBcosClient.burn(proof, commitment);
         } catch (ContractException e) {
             log.error("Error during withdraw: ", e);
             throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
         }
         return response;
     }
-
-    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public ChainTransferResponse transfer(ChainTransferRequest request) throws PpcException {
-        ChainTransferResponse response = new ChainTransferResponse();
-        try {
-            String txHash = fiscoBcosClient.transfer(request.getInputCommitments(), request.getOutputCommitments(), request.getOutputViewKeys(), request.getOutputNoteCiphers(), request.getRelationshipProof(), request.getKnowledgeProofs(), request.getRangeProofs());
-            response.setTxHash(txHash);
-            response.setBlockNumber(0); // You need to get the block number from the transaction receipt
-            response.setStatus("success");
-        } catch (ContractException e) {
-            log.error("Error during transfer: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
-        }
-        return response;
-    }
-
-    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public byte[] getCipherByViewKey(byte[] viewKey) throws PpcException {
-        try {
-            return fiscoBcosClient.getCipherByViewKey(viewKey);
-        } catch (ContractException e) {
-            log.error("Error during getCipherByViewKey: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
-        }
-    }
-
-    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public int getCommitmentStatus(byte[] commitment) throws PpcException {
-        try {
-            return fiscoBcosClient.getCommitmentStatus(commitment);
-        } catch (ContractException e) {
-            log.error("Error during getCommitmentStatus: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
-        }
-    }
+//
+//    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
+//    public ChainTransferResponse transfer(ChainTransferRequest request) throws WedprException {
+//        ChainTransferResponse response = new ChainTransferResponse();
+//        try {
+//            String txHash = fiscoBcosClient.transfer(request.getInputCommitments(), request.getOutputCommitments(), request.getOutputViewKeys(), request.getOutputNoteCiphers(), request.getRelationshipProof(), request.getKnowledgeProofs(), request.getRangeProofs());
+//            response.setTxHash(txHash);
+//            response.setBlockNumber(0); // You need to get the block number from the transaction receipt
+//            response.setStatus("success");
+//        } catch (ContractException e) {
+//            log.error("Error during transfer: ", e);
+//            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
+//        }
+//        return response;
+//    }
 
 }

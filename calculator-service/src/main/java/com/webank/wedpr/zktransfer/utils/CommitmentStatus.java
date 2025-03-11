@@ -3,7 +3,8 @@ package com.webank.wedpr.zktransfer.utils;
 public enum CommitmentStatus {
     NotExist(0), // 不存在
     Unspent(1),  // 未花费
-    Spent(2);     // 已花费
+    Spent(2),     // 已花费
+    Pending(3);     // 处理中s
 
     private final int value;
 

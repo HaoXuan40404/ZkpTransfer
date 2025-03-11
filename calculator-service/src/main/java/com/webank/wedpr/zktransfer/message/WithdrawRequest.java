@@ -6,6 +6,5 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper=false)
 @Data
 public class WithdrawRequest {
-    private String fromAddress;
-    private long amount;
+    private int amount;
 }

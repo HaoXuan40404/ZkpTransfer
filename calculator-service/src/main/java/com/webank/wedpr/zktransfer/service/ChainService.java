@@ -2,7 +2,6 @@ package com.webank.wedpr.zktransfer.service;
 
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.common.PpcException;
-import com.webank.wedpr.zktransfer.message.amop.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.sdk.v3.transaction.model.exception.ContractException;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.webank.wedpr.zktransfer.message.amop;
+package com.webank.wedpr.zktransfer.message.coordinator;
 
 import com.webank.wedpr.zktransfer.message.BaseResponse;
 

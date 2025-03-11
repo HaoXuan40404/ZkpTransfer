@@ -1,10 +1,12 @@
 package com.webank.wedpr.zktransfer.controller;
 
+import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.entity.Account;
 import com.webank.wedpr.zktransfer.message.*;
 import com.webank.wedpr.zktransfer.repository.AccountRepository;
 
+import com.webank.wedpr.zktransfer.service.TransferService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +20,8 @@ import java.sql.Timestamp;
 public class CoordinatorController {
 
     @Autowired private AccountRepository accountRepository;
+
+    @Autowired private TransferService transferService;
 
     private void setSuccessMsg(BaseResponse response) {
         response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
@@ -60,6 +64,16 @@ public class CoordinatorController {
         return baseResponse;
     }
 
+    @PostMapping("/deposit")
+    public BaseResponse deposit(ChainDepositRequest request) throws WedprException  {
+        // 协调方先验证证明
+        return transferService.deposit(request);
+    }
 
+    @PostMapping("/withdraw")
+    public BaseResponse withdraw(ChainWithdrawRequest request) throws WedprException {
+        // 协调方先验证证明
+        return transferService.withdraw(request);
+    }
 
 }
