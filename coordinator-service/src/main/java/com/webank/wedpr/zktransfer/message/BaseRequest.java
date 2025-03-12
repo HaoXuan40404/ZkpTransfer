@@ -6,4 +6,5 @@ import lombok.Data;
 public class BaseRequest {
     private String agencyName;
     private String agencyId;
+    private String bizSeq;
 }

@@ -36,7 +36,8 @@ public class ChainService {
             setSuccessMsg(response);
         } catch (ContractException e) {
             log.error("Error during deposit: ", e);
-            setSuccessMsg(response);
+//            setErrorMsg(response);
+            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
         }
         return response;
     }
@@ -48,6 +49,7 @@ public class ChainService {
             fiscoBcosClient.burn(proof, commitment);
         } catch (ContractException e) {
             log.error("Error during withdraw: ", e);
+//            setErrorMsg(response);
             throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
         }
         return response;

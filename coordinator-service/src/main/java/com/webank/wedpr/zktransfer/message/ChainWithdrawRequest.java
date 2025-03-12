@@ -7,7 +7,7 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class ChainWithdrawRequest {
+public class ChainWithdrawRequest extends BaseRequest{
     private List<byte[]> valueProofsList;
     private List<byte[]> knwoledProofsList;
     private List<byte[]> commitmentsList;

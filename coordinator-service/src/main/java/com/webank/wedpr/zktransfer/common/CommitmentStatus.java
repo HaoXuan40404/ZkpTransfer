@@ -1,4 +1,4 @@
-package com.webank.wedpr.zktransfer.utils;
+package com.webank.wedpr.zktransfer.common;
 
 public enum CommitmentStatus {
     NotExist(0), // 不存在
