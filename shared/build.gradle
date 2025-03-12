@@ -19,7 +19,6 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation project(':shared')
     def springboot_version = "3.2.0"
     implementation "org.springframework.boot:spring-boot-starter-web:$springboot_version"
     implementation "org.springframework.boot:spring-boot-starter-aop:$springboot_version"

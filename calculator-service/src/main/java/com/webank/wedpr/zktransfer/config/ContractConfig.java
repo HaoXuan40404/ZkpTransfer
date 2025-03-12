@@ -6,7 +6,6 @@ import com.webank.wedpr.zktransfer.service.FiscoBcosClient;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.sdk.v3.client.Client;
-import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;

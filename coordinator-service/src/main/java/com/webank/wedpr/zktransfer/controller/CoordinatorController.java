@@ -4,6 +4,10 @@ import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.entity.Account;
 import com.webank.wedpr.zktransfer.message.*;
+import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.ChainTransferInitialRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.RegisterInfoRequest;
 import com.webank.wedpr.zktransfer.repository.AccountRepository;
 
 import com.webank.wedpr.zktransfer.service.TransferService;
@@ -76,4 +80,11 @@ public class CoordinatorController {
         return transferService.withdraw(request);
     }
 
+
+    @PostMapping("/transfer")
+    public BaseResponse transfer(@Validated @RequestBody ChainTransferInitialRequest request) throws WedprException {
+        // TODO:
+        BaseResponse baseResponse = new BaseResponse();
+        return baseResponse;
+    }
 }

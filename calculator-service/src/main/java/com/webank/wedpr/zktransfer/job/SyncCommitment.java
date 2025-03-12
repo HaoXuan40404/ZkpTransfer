@@ -6,14 +6,13 @@ import com.webank.wedpr.zktransfer.entity.CommitmentEntity;
 import com.webank.wedpr.zktransfer.repository.CommitmentRepository;
 import com.webank.wedpr.zktransfer.service.AESUtils;
 import com.webank.wedpr.zktransfer.service.ChainService;
-import com.webank.wedpr.zktransfer.utils.KeyDriveFunction;
+import com.webank.wedpr.zktransfer.common.KeyDriveFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Optional;

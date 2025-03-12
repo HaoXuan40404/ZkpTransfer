@@ -1,3 +1,14 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.webank.wedpr'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
@@ -8,8 +19,8 @@ configurations.configureEach {
 }
 
 dependencies {
+    implementation project(':shared')
     def springboot_version = "3.2.0"
-
     implementation "org.springframework.boot:spring-boot-starter-web:$springboot_version"
     implementation "org.springframework.boot:spring-boot-starter-aop:$springboot_version"
     implementation "org.springframework.boot:spring-boot-starter-validation:$springboot_version"
@@ -20,7 +31,6 @@ dependencies {
     implementation("org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:3.2.0") {
         exclude group: 'org.slf4j'
     }
-//    implementation("org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:3.2.0")
     implementation 'com.mysql:mysql-connector-j:8.2.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.yaml:snakeyaml:2.0'

@@ -3,11 +3,8 @@ package com.webank.wedpr.zktransfer.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wedpr.zktransfer.contracts.ZkTransfer;
 import org.fisco.bcos.sdk.v3.client.Client;
-import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 import org.fisco.bcos.sdk.v3.transaction.model.exception.ContractException;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 public class FiscoBcosClient {
 

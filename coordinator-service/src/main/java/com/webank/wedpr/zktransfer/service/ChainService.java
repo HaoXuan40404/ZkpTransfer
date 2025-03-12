@@ -5,6 +5,9 @@ import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.common.PpcException;
 import com.webank.wedpr.zktransfer.message.*;
 
+import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositResponse;
+import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;

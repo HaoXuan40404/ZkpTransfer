@@ -1,4 +1,4 @@
-CREATE TABLE transaction_history (
+CREATE TABLE t_transaction_history (
     id INT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     biz_seq VARCHAR(64) NOT NULL COMMENT '业务流水号',
     commitment VARCHAR(256) COMMENT '承诺',

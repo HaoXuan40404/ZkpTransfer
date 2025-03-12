@@ -1,4 +1,5 @@
 rootProject.name = 'bcos-zktransfer'
+include 'shared'
 include 'coordinator-service'
 include 'calculator-service'
 // include 'contracts'

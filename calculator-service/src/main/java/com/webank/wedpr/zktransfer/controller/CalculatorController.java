@@ -1,27 +1,27 @@
 package com.webank.wedpr.zktransfer.controller;
 
 import com.webank.wedpr.crypto.zkp.WedprException;
+import com.webank.wedpr.zktransfer.common.CommitmentStatus;
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
+import com.webank.wedpr.zktransfer.common.Utils;
 import com.webank.wedpr.zktransfer.config.AgencyConfig;
-import com.webank.wedpr.zktransfer.config.CoordinatorConfig;
-import com.webank.wedpr.zktransfer.config.SystemConfig;
 import com.webank.wedpr.zktransfer.message.*;
 
+import com.webank.wedpr.zktransfer.message.calculator.DepositRequest;
+import com.webank.wedpr.zktransfer.message.calculator.WithdrawRequest;
 import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
 import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositResponse;
 import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawRequest;
 import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawResponse;
 import com.webank.wedpr.zktransfer.service.CoordinatorClient;
 import com.webank.wedpr.zktransfer.service.TransferService;
-import com.webank.wedpr.zktransfer.utils.CommitmentStatus;
-import com.webank.wedpr.zktransfer.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
-import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.security.NoSuchAlgorithmException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
