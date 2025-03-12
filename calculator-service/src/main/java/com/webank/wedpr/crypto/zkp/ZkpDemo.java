@@ -121,7 +121,8 @@ public class ZkpDemo {
         System.out.println("\n=== Testing Multi-Sum Relationship Proof ===");
 
         // 示例参数
-        int[] senderValues = {10, 20};
+        int[] senderValues = {20, 20};
+        int[] receiverValuesOwner = {10};
         int[] receiverValues = {30};
         byte[][] senderBlindings = {generateRandomBytes(32), generateRandomBytes(32)};
         byte[][] receiverBlindings = {generateRandomBytes(32)};

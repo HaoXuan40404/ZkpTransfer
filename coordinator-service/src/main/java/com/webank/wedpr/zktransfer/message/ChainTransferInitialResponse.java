@@ -5,7 +5,5 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class TransferRequest extends  BaseRequest{
-    private String receiverBankInfo;
-    private int spendAmountList;
+public class ChainTransferInitialResponse extends BaseResponse {
 }
