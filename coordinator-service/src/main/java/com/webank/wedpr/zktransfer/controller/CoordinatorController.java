@@ -65,13 +65,13 @@ public class CoordinatorController {
     }
 
     @PostMapping("/deposit")
-    public BaseResponse deposit(ChainDepositRequest request) throws WedprException  {
+    public BaseResponse deposit(@Validated @RequestBody ChainDepositRequest request) throws WedprException  {
         // 协调方先验证证明
         return transferService.deposit(request);
     }
 
     @PostMapping("/withdraw")
-    public BaseResponse withdraw(ChainWithdrawRequest request) throws WedprException {
+    public BaseResponse withdraw(@Validated @RequestBody ChainWithdrawRequest request) throws WedprException {
         // 协调方先验证证明
         return transferService.withdraw(request);
     }

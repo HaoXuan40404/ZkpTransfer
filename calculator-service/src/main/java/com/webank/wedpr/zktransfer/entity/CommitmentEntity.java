@@ -7,12 +7,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 @Setter
 @Getter
 @Entity
-@Table(name = "t_commitment_entity")
+@Table(name = "t_commitment")
 public class CommitmentEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -20,20 +19,18 @@ public class CommitmentEntity implements Serializable {
     @Column(name = "commitment", length = 256, nullable = false)
     private String commitment;
 
-    @Column(nullable = false, unique = true)
-    private int index;
+    @Column(name = "kdf_index", nullable = false, unique = true)
+    private int kdfIndex;
 
-    @Column(nullable = false)
-    private int value;
+    @Column(name = "commitment_value", nullable = false)
+    private int commitmentValue;
 
     @Column(nullable = false)
     private int status;
 
-    @CreationTimestamp
-    @Column(name = "create_time", nullable = false, updatable = false)
+    @Column(name = "create_time", nullable = false)
     private Timestamp createTime;
 
-    @UpdateTimestamp
     @Column(name = "update_time", nullable = false)
     private Timestamp updateTime;
 
@@ -41,8 +38,8 @@ public class CommitmentEntity implements Serializable {
     public String toString() {
         return "CommitmentEntity{" +
                "commitment='" + commitment + '\'' +
-               ", index='" + index + '\'' +
-               ", value=" + value +
+               ", index='" + kdfIndex + '\'' +
+               ", value=" + commitmentValue +
                ", createTime=" + createTime +
                ", updateTime=" + updateTime +
                '}';

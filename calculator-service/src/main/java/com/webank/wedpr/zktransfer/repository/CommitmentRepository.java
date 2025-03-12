@@ -13,10 +13,10 @@ import java.util.Optional;
 @Repository
 public interface CommitmentRepository extends JpaRepository<CommitmentEntity, String> {
 
-    @Query("SELECT c FROM CommitmentEntity c WHERE c.index = (SELECT MAX(c2.index) FROM CommitmentEntity c2)")
+    @Query("SELECT c FROM CommitmentEntity c WHERE c.kdfIndex = (SELECT MAX(c2.kdfIndex) FROM CommitmentEntity c2)")
     Optional<CommitmentEntity> findMaxIndexCommitment();
 
-    @Query("SELECT SUM(c.value) FROM CommitmentEntity c WHERE c.status = ?1")
+    @Query("SELECT SUM(c.commitmentValue) FROM CommitmentEntity c WHERE c.status = ?1")
     Integer sumValuesByStatus(int status);
 
     Optional<CommitmentEntity> findByCommitment(String commitment);

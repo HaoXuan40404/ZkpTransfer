@@ -38,11 +38,10 @@ public class TransferService {
         int currentIndex = 0;
         if(maxIndexCommitmentOpt.isPresent())
         {
-            currentIndex = maxIndexCommitmentOpt.get().getIndex();
+            currentIndex = maxIndexCommitmentOpt.get().getKdfIndex();
             currentIndex++;
         }
         // index++ 生成新的commitment和viewKey 记录到db中 status pending状态
-        log.info("Current index: {}", currentIndex);
         byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, currentIndex);
         byte[] viewKey = nativeInterface.computeViewkey(indexBlinding).expectNoError().viewkey;
         int amount = request.getAmount();
@@ -52,6 +51,7 @@ public class TransferService {
         // 生成commitment的proof 构造ChainDepositRequest
         byte[] commitment = nativeInterface.computeCommitment(amount, indexBlinding).expectNoError().commitment;
         byte[] proof = nativeInterface.proveValueEqualityRelationshipProof(amount, indexBlinding).expectNoError().proof;
+
 
         ChainDepositRequest chainDepositRequest = new ChainDepositRequest();
         chainDepositRequest.setCommitment(commitment);
@@ -64,11 +64,13 @@ public class TransferService {
         String commitmentStr = Hex.toHexString(commitment);
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         newCommitmentEntity.setCommitment(commitmentStr);
-        newCommitmentEntity.setValue(amount);
-        newCommitmentEntity.setIndex(currentIndex);
+        newCommitmentEntity.setCommitmentValue(amount);
+        newCommitmentEntity.setKdfIndex(currentIndex);
         newCommitmentEntity.setUpdateTime(timestamp);
         newCommitmentEntity.setCreateTime(timestamp);
         newCommitmentEntity.setStatus(CommitmentStatus.Pending.getValue());
+        commitmentRepository.save(newCommitmentEntity);
+        log.info("deposit commitment {}, Current index: {} with pending", commitmentStr, currentIndex);
         return chainDepositRequest;
     }
 
@@ -84,8 +86,8 @@ public class TransferService {
         List<byte[]> selectedCommitmentsBytes = new ArrayList<>();
         List<Integer> selectedValues = new ArrayList<>();
         for (CommitmentEntity commitmentEntity : unspentCommitments) {
-            totalAmount += commitmentEntity.getValue();
-            selectedValues.add(commitmentEntity.getValue());
+            totalAmount += commitmentEntity.getCommitmentValue();
+            selectedValues.add(commitmentEntity.getCommitmentValue());
             selectedCommitmentsBytes.add(Hex.decode(commitmentEntity.getCommitment()));
             selectedCommitments.add(commitmentEntity);
             if (totalAmount >= requestedAmount) {
@@ -101,9 +103,9 @@ public class TransferService {
         List<byte[]> valueProofs = new ArrayList<>();
         List<byte[]> knowledgeProofs = new ArrayList<>();
         for (CommitmentEntity commitmentEntity : selectedCommitments) {
-            byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, commitmentEntity.getIndex());
-            byte[] valueProof = nativeInterface.proveValueEqualityRelationshipProof(commitmentEntity.getValue(), indexBlinding).expectNoError().proof;
-            byte[] knowledgeProof = nativeInterface.proveKnowledgeProof(commitmentEntity.getValue(), indexBlinding).expectNoError().proof;
+            byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, commitmentEntity.getKdfIndex());
+            byte[] valueProof = nativeInterface.proveValueEqualityRelationshipProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
+            byte[] knowledgeProof = nativeInterface.proveKnowledgeProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
             valueProofs.add(valueProof);
             knowledgeProofs.add(knowledgeProof);
         }

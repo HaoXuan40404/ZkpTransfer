@@ -35,23 +35,23 @@ public class SyncCommitment {
     // TODO: 稳健性 服务启动时启动 扫描一次所有的CM
     @Scheduled(fixedRate = 1000) // Runs every second
     public void syncCommitments() throws NoSuchAlgorithmException, WedprException {
-        log.info("Syncing commitments...");
+        log.debug("Syncing commitments...");
         while (true) {
             // 读取CommitmentRepository中Commitment index的最大值
             Optional<CommitmentEntity> maxIndexCommitmentOpt = commitmentRepository.findMaxIndexCommitment();
             int currentIndex = 0;
             if(maxIndexCommitmentOpt.isPresent())
             {
-                currentIndex = maxIndexCommitmentOpt.get().getIndex();
+                currentIndex = maxIndexCommitmentOpt.get().getKdfIndex();
                 currentIndex++;
             }
-            log.info("Current index: {}", currentIndex);
+            log.debug("Current index: {}", currentIndex);
             byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, currentIndex);
             byte[] viewKey = nativeInterface.computeViewkey(indexBlinding).expectNoError().viewkey;
             byte[] valueCipher = chainService.getCipherByViewKey(viewKey);
             // 未查询到 表示已经同步完毕
             if(valueCipher.length == 0) {
-                log.info("No more commitments to sync. index = {}", currentIndex);
+                log.debug("No more commitments to sync. index = {}", currentIndex);
                 break;
             }
             // 解密失败异常中断 不是自己的viewKey
@@ -77,11 +77,13 @@ public class SyncCommitment {
                 }
                 
             } else {
+                log.info("save commitmentEntity: {}", currentIndex);
                 CommitmentEntity commitmentEntity = new CommitmentEntity();
                 commitmentEntity.setCommitment(commitmentStr);
                 commitmentEntity.setStatus(commitmentStatus);
-                commitmentEntity.setIndex(currentIndex);
+                commitmentEntity.setKdfIndex(currentIndex);
                 commitmentEntity.setUpdateTime(timestamp);
+                commitmentEntity.setCommitmentValue(value);
                 commitmentRepository.save(commitmentEntity);
             }
 

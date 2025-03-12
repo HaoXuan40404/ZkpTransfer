@@ -44,29 +44,26 @@ public class CalculatorController {
             ChainDepositRequest chainDepositRequest = transferService.deposit(request);
             // 调用协调服务的deposit接口
             ChainDepositResponse response = coordinatorClient.deposit(chainDepositRequest);
+            //更新DB状态
             transferService.updateCommitmentStatus(chainDepositRequest.getCommitment(), CommitmentStatus.Unspent.getValue());
-            //TODO: 更新DB状态
-            setSuccessMsg(response);
             return response;
         } catch (Exception e) {
+            log.error("deposit failed,", e);
             throw new WedprException(e);
         }
     }
 
     @PostMapping("/withdraw")
-    public WithdrawResponse withdraw(
+    public ChainWithdrawResponse withdraw(
             @Validated @RequestBody WithdrawRequest request) throws Exception {
-        WithdrawResponse response = new WithdrawResponse();
         try {
             ChainWithdrawRequest chainWithdrawRequest = transferService.withdraw(request);
-            // 调用协调服务的deposit接口
-            coordinatorClient.withdraw(chainWithdrawRequest);
+            // 调用协调服务的接口
+            ChainWithdrawResponse response = coordinatorClient.withdraw(chainWithdrawRequest);
             //更新DB状态
             for (int i = 0; i <chainWithdrawRequest.getCommitmentsList().size(); i++) {
                 transferService.updateCommitmentStatus(chainWithdrawRequest.getCommitmentsList().get(i), CommitmentStatus.Spent.getValue());
             }
-
-            setSuccessMsg(response);
             return response;
         } catch (Exception e) {
             throw new WedprException(e);
