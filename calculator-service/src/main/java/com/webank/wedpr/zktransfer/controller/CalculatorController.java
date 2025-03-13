@@ -9,10 +9,8 @@ import com.webank.wedpr.zktransfer.message.*;
 
 import com.webank.wedpr.zktransfer.message.calculator.DepositRequest;
 import com.webank.wedpr.zktransfer.message.calculator.WithdrawRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositResponse;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawResponse;
+import com.webank.wedpr.zktransfer.message.coordinator.MintCommitmentRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.BurnCommitmentRequest;
 import com.webank.wedpr.zktransfer.service.CoordinatorClient;
 import com.webank.wedpr.zktransfer.service.TransferService;
 import lombok.extern.slf4j.Slf4j;
@@ -55,13 +53,13 @@ public class CalculatorController {
         
         // TODO:
         try {
-            ChainDepositRequest chainDepositRequest = transferService.deposit(request);
+            MintCommitmentRequest mintCommitmentRequest = transferService.deposit(request);
             // 设置uuid和本机构信息
-            setAgencyInfoWithUuid(chainDepositRequest);
+            setAgencyInfoWithUuid(mintCommitmentRequest);
             // 调用协调服务的deposit接口
-            ChainDepositResponse response = coordinatorClient.deposit(chainDepositRequest);
+            BaseResponse response = coordinatorClient.deposit(mintCommitmentRequest);
             //更新DB状态
-            transferService.updateCommitmentStatus(chainDepositRequest.getCommitment(), CommitmentStatus.Unspent.getValue());
+            transferService.updateCommitmentStatus(mintCommitmentRequest.getCommitment(), CommitmentStatus.Unspent.getValue());
             return response;
         } catch (Exception e) {
             log.error("deposit failed,", e);
@@ -70,16 +68,16 @@ public class CalculatorController {
     }
 
     @PostMapping("/withdraw")
-    public ChainWithdrawResponse withdraw(
+    public BaseResponse withdraw(
             @Validated @RequestBody WithdrawRequest request) throws Exception {
         try {
-            ChainWithdrawRequest chainWithdrawRequest = transferService.withdraw(request);
-            setAgencyInfoWithUuid(chainWithdrawRequest);
+            BurnCommitmentRequest burnCommitmentRequest = transferService.withdraw(request);
+            setAgencyInfoWithUuid(burnCommitmentRequest);
             // 调用协调服务的接口
-            ChainWithdrawResponse response = coordinatorClient.withdraw(chainWithdrawRequest);
+            BaseResponse response = coordinatorClient.withdraw(burnCommitmentRequest);
             //更新DB状态
-            for (int i = 0; i <chainWithdrawRequest.getCommitmentsList().size(); i++) {
-                transferService.updateCommitmentStatus(chainWithdrawRequest.getCommitmentsList().get(i), CommitmentStatus.Spent.getValue());
+            for (int i = 0; i < burnCommitmentRequest.getCommitmentsList().size(); i++) {
+                transferService.updateCommitmentStatus(burnCommitmentRequest.getCommitmentsList().get(i), CommitmentStatus.Spent.getValue());
             }
             return response;
         } catch (Exception e) {

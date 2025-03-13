@@ -6,9 +6,9 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class ChainDepositRequest extends BaseRequest {
+public class MintCommitmentRequest extends BaseRequest {
     private byte[] proof; // value equality proof
-    private byte[] rangeProof;
+    private byte[] rangeProof; // for transfer
     private byte[] commitment;
     private byte[] viewKey;
     private byte[] cipher;

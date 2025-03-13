@@ -5,8 +5,8 @@ import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.entity.CommitmentEntity;
 import com.webank.wedpr.zktransfer.message.calculator.DepositRequest;
 import com.webank.wedpr.zktransfer.message.calculator.WithdrawRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainWithdrawRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.MintCommitmentRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.BurnCommitmentRequest;
 import com.webank.wedpr.zktransfer.repository.CommitmentRepository;
 import com.webank.wedpr.zktransfer.common.CommitmentStatus;
 import com.webank.wedpr.zktransfer.common.KeyDriveFunction;
@@ -32,7 +32,7 @@ public class TransferService {
 
     @Autowired private byte[] servicePrivateKey;
 
-    public ChainDepositRequest deposit(DepositRequest request) throws NoSuchAlgorithmException, WedprException {
+    public MintCommitmentRequest deposit(DepositRequest request) throws NoSuchAlgorithmException, WedprException {
         // 查询db拿到用户密钥 和commitment最大的index
         Optional<CommitmentEntity> maxIndexCommitmentOpt = commitmentRepository.findMaxIndexCommitment();
         int currentIndex = 0;
@@ -53,12 +53,12 @@ public class TransferService {
         byte[] proof = nativeInterface.proveValueEqualityRelationshipProof(amount, indexBlinding).expectNoError().proof;
 
 
-        ChainDepositRequest chainDepositRequest = new ChainDepositRequest();
-        chainDepositRequest.setCommitment(commitment);
-        chainDepositRequest.setProof(proof);
-        chainDepositRequest.setAmount(amount);
-        chainDepositRequest.setCipher(cipher);
-        chainDepositRequest.setViewKey(viewKey);
+        MintCommitmentRequest mintCommitmentRequest = new MintCommitmentRequest();
+        mintCommitmentRequest.setCommitment(commitment);
+        mintCommitmentRequest.setProof(proof);
+        mintCommitmentRequest.setAmount(amount);
+        mintCommitmentRequest.setCipher(cipher);
+        mintCommitmentRequest.setViewKey(viewKey);
 
         CommitmentEntity newCommitmentEntity = new CommitmentEntity();
         String commitmentStr = Hex.toHexString(commitment);
@@ -71,10 +71,10 @@ public class TransferService {
         newCommitmentEntity.setStatus(CommitmentStatus.Pending.getValue());
         commitmentRepository.save(newCommitmentEntity);
         log.info("deposit commitment {}, Current index: {} with pending", commitmentStr, currentIndex);
-        return chainDepositRequest;
+        return mintCommitmentRequest;
     }
 
-    public ChainWithdrawRequest withdraw(WithdrawRequest request) throws WedprException, NoSuchAlgorithmException {
+    public BurnCommitmentRequest withdraw(WithdrawRequest request) throws WedprException, NoSuchAlgorithmException {
         int requestedAmount = request.getAmount();
         int totalAmount = 0;
 
@@ -111,11 +111,11 @@ public class TransferService {
         }
 
         // 构造ChainWithdrawRequest
-        ChainWithdrawRequest chainWithdrawRequest = new ChainWithdrawRequest();
-        chainWithdrawRequest.setAmountList(selectedValues);
-        chainWithdrawRequest.setCommitmentsList(selectedCommitmentsBytes);
-        chainWithdrawRequest.setKnwoledProofsList(knowledgeProofs);
-        chainWithdrawRequest.setValueProofsList(valueProofs);
+        BurnCommitmentRequest burnCommitmentRequest = new BurnCommitmentRequest();
+        burnCommitmentRequest.setAmountList(selectedValues);
+        burnCommitmentRequest.setCommitmentsList(selectedCommitmentsBytes);
+        burnCommitmentRequest.setKnwoledProofsList(knowledgeProofs);
+        burnCommitmentRequest.setValueProofsList(valueProofs);
 
         // 调用coordinator的withdraw
 
@@ -125,7 +125,7 @@ public class TransferService {
             commitmentRepository.save(commitmentEntity);
         }
 
-        return chainWithdrawRequest;
+        return burnCommitmentRequest;
     }
 
     public void updateCommitmentStatus(byte[] commitment, int status)

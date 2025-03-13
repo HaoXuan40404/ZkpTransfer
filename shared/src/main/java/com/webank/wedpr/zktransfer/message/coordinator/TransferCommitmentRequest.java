@@ -8,12 +8,12 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class ChainTransferInitialRequest extends BaseRequest {
+public class TransferCommitmentRequest extends BaseRequest {
     // 发送的钱
-    private ChainWithdrawRequest inputInfos;
+    private BurnCommitmentRequest inputInfos;
     private List<byte[]> inputBalanceInitialShares;
     // 找零给自己的钱
-    private ChainDepositRequest changeInfos;
+    private MintCommitmentRequest changeInfos;
     private byte[] changeBalanceInitialShare;
     // 给银行的钱
     private String receiverBankName;

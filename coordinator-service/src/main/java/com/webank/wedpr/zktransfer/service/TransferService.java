@@ -6,7 +6,7 @@ import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.common.TransactionStatus;
 import com.webank.wedpr.zktransfer.entity.Account;
 import com.webank.wedpr.zktransfer.entity.TransactionHistory;
-import com.webank.wedpr.zktransfer.message.*;
+import com.webank.wedpr.zktransfer.message.BaseResponse;
 import com.webank.wedpr.zktransfer.message.calculator.TransferCompleteRequest;
 import com.webank.wedpr.zktransfer.message.calculator.TransferCompleteResponse;
 import com.webank.wedpr.zktransfer.message.calculator.TransferReceiveRequest;
@@ -51,7 +51,7 @@ public class TransferService {
 
     // 并发相同的rG会导致链上写入失败 但是不会导致用户资产丢失
 
-    public ChainDepositResponse deposit(ChainDepositRequest request) throws WedprException {
+    public BaseResponse deposit(MintCommitmentRequest request) throws WedprException {
         // 验证参与方的proof和value
         byte[] proof = request.getProof();
         int amount = request.getAmount();
@@ -72,10 +72,14 @@ public class TransferService {
         transactionHistory.setTransType(TransactionStatus.Deposit.getValue());
         transactionHistoryRepository.save(transactionHistory);
         // 上链
-        return chainService.deposit(request);
+        chainService.deposit(request.getCommitment(), request.getViewKey(), request.getCipher());
+        BaseResponse response = new BaseResponse();
+        response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
+        response.setMessage(EnumResponseStatus.SUCCESS.getMessage());
+        return response;
     }
 
-    public ChainWithdrawResponse withdraw(ChainWithdrawRequest request) throws WedprException {
+    public BaseResponse withdraw(BurnCommitmentRequest request) throws WedprException {
         // 验证参与方的proof和value
         for (int i = 0; i < request.getAmountList().size(); i++) {
             byte[] valueProof = request.getValueProofsList().get(i);
@@ -115,14 +119,14 @@ public class TransferService {
             byte[] commitment = request.getCommitmentsList().get(i);
             chainService.withdraw(knowledgeProof, commitment);
         }
-        ChainWithdrawResponse response = new ChainWithdrawResponse();
+        BaseResponse response = new BaseResponse();
         response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
         response.setMessage(EnumResponseStatus.SUCCESS.getMessage());
         return response;
     }
 
     // TODO: 可减少range proof 增加效率 hkma来验证value
-    public void transfer(ChainTransferInitialRequest request) throws WedprException {
+    public BaseResponse transfer(TransferCommitmentRequest request) throws WedprException {
         // 1. 查询db t_account 拿到发送方和接收方的银行url 不存在则报错
         String fromBank = request.getAgencyName();
         String toBank = request.getReceiverBankName();
@@ -215,7 +219,7 @@ public class TransferService {
         TransferReceiveResponse transferReceiveResponse = calculatorClient.transferReceive(toBankUrl,
                 transferReceiveRequest);
         byte[] receiveResponseBalanceInitialShare = transferReceiveResponse.getBalanceInitialShare();
-        ChainDepositRequest receiveProof = transferReceiveResponse.getReceiveProof();
+        MintCommitmentRequest receiveProof = transferReceiveResponse.getReceiveProof();
         // 验证接收方的proof
         if (nativeInterface.verifyValueEqualityRelationshipProof(receiveProof.getAmount(), receiveProof.getCommitment(),
                 receiveProof.getProof()).expectNoError().result) {
@@ -295,6 +299,9 @@ public class TransferService {
         transactionHistories.add(transactionHistory);
         transactionHistoryRepository.saveAll(transactionHistories);
         // 7. 返回
-        return;
+        BaseResponse response = new BaseResponse();
+        response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
+        response.setMessage(EnumResponseStatus.SUCCESS.getMessage());
+        return response;
     }
 }

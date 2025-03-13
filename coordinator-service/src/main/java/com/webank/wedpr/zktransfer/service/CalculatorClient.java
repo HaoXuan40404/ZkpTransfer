@@ -4,8 +4,6 @@ import com.webank.wedpr.zktransfer.message.calculator.TransferCompleteRequest;
 import com.webank.wedpr.zktransfer.message.calculator.TransferCompleteResponse;
 import com.webank.wedpr.zktransfer.message.calculator.TransferReceiveRequest;
 import com.webank.wedpr.zktransfer.message.calculator.TransferReceiveResponse;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.ChainDepositResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,6 @@
 package com.webank.wedpr.zktransfer.service;
 
-import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
-import com.webank.wedpr.zktransfer.common.PpcException;
+import com.webank.wedpr.crypto.zkp.WedprException;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.sdk.v3.transaction.model.exception.ContractException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,23 +14,23 @@ public class ChainService {
     @Autowired
     private FiscoBcosClient fiscoBcosClient;
 
-    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public byte[] getCipherByViewKey(byte[] viewKey) throws PpcException {
+    @Retryable(value = {WedprException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
+    public byte[] getCipherByViewKey(byte[] viewKey) throws WedprException {
         try {
             return fiscoBcosClient.getCipherByViewKey(viewKey);
         } catch (ContractException e) {
             log.error("Error during getCipherByViewKey: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
+            throw new WedprException(e.getMessage());
         }
     }
 
-    @Retryable(value = {PpcException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
-    public int getCommitmentStatus(byte[] commitment) throws PpcException {
+    @Retryable(value = {WedprException.class}, backoff = @Backoff(delay = 2000, multiplier = 1.5))
+    public int getCommitmentStatus(byte[] commitment) throws WedprException {
         try {
             return fiscoBcosClient.getCommitmentStatus(commitment);
         } catch (ContractException e) {
             log.error("Error during getCommitmentStatus: ", e);
-            throw new PpcException(EnumResponseStatus.FAILURE.getErrorCode(), e.getMessage());
+            throw new WedprException(e.getMessage());
         }
     }
 

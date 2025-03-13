@@ -1,5 +1,6 @@
 package com.webank.wedpr.zktransfer.common;
 
+import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.message.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindException;
@@ -29,14 +30,8 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(value = PpcException.class)
-    public BaseResponse handlePpcException(PpcException e) {
-        BaseResponse response = e.getBaseResponse();
-        return response;
-    }
-
     @ExceptionHandler(value = RuntimeException.class)
-    public BaseResponse handlePpcException(RuntimeException e) {
+    public BaseResponse handleWedprException(RuntimeException e) {
         BaseResponse response = new BaseResponse();
         response.setErrorCode(EnumResponseStatus.FAILURE.getErrorCode());
         response.setMessage(e.getMessage());
@@ -44,7 +39,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = Throwable.class)
-    public BaseResponse handlePpcException(Throwable e) {
+    public BaseResponse handleWedprException(Throwable e) {
         BaseResponse response = new BaseResponse();
         response.setErrorCode(EnumResponseStatus.FAILURE.getErrorCode());
         response.setMessage(e.getLocalizedMessage());

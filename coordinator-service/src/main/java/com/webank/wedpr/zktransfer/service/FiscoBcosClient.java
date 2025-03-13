@@ -36,21 +36,18 @@ public class FiscoBcosClient {
         }
     }
 
-    public String mint(byte[] commitment, byte[] viewKey, byte[] cipher) throws ContractException {
+    public void mint(byte[] commitment, byte[] viewKey, byte[] cipher) throws ContractException {
         TransactionReceipt receipt = zkTransfer.mint(commitment, viewKey, cipher);
         checkTransactionReceipt(receipt);
-        return receipt.getTransactionHash();
     }
 
-    public String transfer(List<byte[]> inputCommitments, List<byte[]> outputCommitments, List<byte[]> outputViewKeys, List<byte[]> outputNoteCiphers, byte[] relationshipProof, List<byte[]> knowledgeProofs, List<byte[]> rangeProofs) throws ContractException {
+    public void transfer(List<byte[]> inputCommitments, List<byte[]> outputCommitments, List<byte[]> outputViewKeys, List<byte[]> outputNoteCiphers, byte[] relationshipProof, List<byte[]> knowledgeProofs, List<byte[]> rangeProofs) throws ContractException {
         TransactionReceipt receipt = zkTransfer.transfer(inputCommitments, outputCommitments, outputViewKeys, outputNoteCiphers, relationshipProof, knowledgeProofs, rangeProofs);
         checkTransactionReceipt(receipt);
-        return receipt.getTransactionHash();
     }
 
-    public String burn(byte[] proof, byte[] commitment) throws ContractException {
+    public void burn(byte[] proof, byte[] commitment) throws ContractException {
         TransactionReceipt receipt = zkTransfer.burn(proof, commitment);
         checkTransactionReceipt(receipt);
-        return receipt.getTransactionHash();
     }
 }
