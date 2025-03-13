@@ -9,4 +9,5 @@ import lombok.EqualsAndHashCode;
 @Data
 public class TransferReceiveResponse extends BaseRequest {
     private ChainDepositRequest receiveProof;
+    private byte[] balanceInitialShare;
 }

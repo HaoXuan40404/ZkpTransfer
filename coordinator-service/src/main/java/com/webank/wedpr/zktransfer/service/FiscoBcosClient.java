@@ -53,12 +53,4 @@ public class FiscoBcosClient {
         checkTransactionReceipt(receipt);
         return receipt.getTransactionHash();
     }
-
-    public byte[] getCipherByViewKey(byte[] viewKey) throws ContractException {
-        return zkTransfer.queryNoteSetCipherByKey(viewKey);
-    }
-
-    public int getCommitmentStatus(byte[] commitment) throws ContractException {
-        return zkTransfer.queryCommitmentStatus(commitment).intValue();
-    }
 }

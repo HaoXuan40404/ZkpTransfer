@@ -7,5 +7,5 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper=false)
 @Data
 public class TransferCompleteRequest extends BaseRequest {
-    private String check;
+    private byte[] check;
 }

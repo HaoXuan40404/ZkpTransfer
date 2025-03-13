@@ -221,7 +221,7 @@ public class ZkpDemo {
         return result;
     }
 
-    private static byte[] concatBytesArray(List<byte[]> arrays) {
+    public static byte[] concatBytesArray(List<byte[]> arrays) {
         // 示例实现，实际可能需要更严谨的拼接方式
         int totalLength = 0;
         for (byte[] array : arrays) totalLength += array.length;

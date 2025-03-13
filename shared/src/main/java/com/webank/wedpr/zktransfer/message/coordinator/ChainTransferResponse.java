@@ -7,7 +7,4 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper=false)
 @Data
 public class ChainTransferResponse extends BaseResponse {
-    private String txHash;
-    private long blockNumber;
-    private String status;
 }
