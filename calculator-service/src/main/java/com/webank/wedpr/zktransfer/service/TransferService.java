@@ -32,6 +32,7 @@ public class TransferService {
 
     @Autowired private byte[] servicePrivateKey;
 
+
     public MintCommitmentRequest deposit(DepositRequest request) throws NoSuchAlgorithmException, WedprException {
         // 查询db拿到用户密钥 和commitment最大的index
         Optional<CommitmentEntity> maxIndexCommitmentOpt = commitmentRepository.findMaxIndexCommitment();
@@ -133,4 +134,6 @@ public class TransferService {
         String commitmentStr = Hex.toHexString(commitment);
         commitmentRepository.updateStatusByCommitment(commitmentStr, status);
     }
+
+    // 查询
 }

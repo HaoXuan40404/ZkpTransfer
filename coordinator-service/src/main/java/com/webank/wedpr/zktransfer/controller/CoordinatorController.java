@@ -3,20 +3,21 @@ package com.webank.wedpr.zktransfer.controller;
 import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.zktransfer.common.EnumResponseStatus;
 import com.webank.wedpr.zktransfer.entity.Account;
+import com.webank.wedpr.zktransfer.entity.TransactionHistory;
 import com.webank.wedpr.zktransfer.message.*;
-import com.webank.wedpr.zktransfer.message.coordinator.MintCommitmentRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.TransferCommitmentRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.BurnCommitmentRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.RegisterInfoRequest;
+import com.webank.wedpr.zktransfer.message.coordinator.*;
 import com.webank.wedpr.zktransfer.repository.AccountRepository;
 
 import com.webank.wedpr.zktransfer.service.TransferService;
 import lombok.extern.slf4j.Slf4j;
+
+import org.hibernate.query.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -89,6 +90,21 @@ public class CoordinatorController {
     public BaseResponse transfer(@Validated @RequestBody TransferCommitmentRequest request) throws WedprException {
         BaseResponse response = transferService.transfer(request);
         setSuccessMsg(response);
+        return response;
+    }
+
+    // 分页查询历史
+    @GetMapping("/history")
+    public TransactionHistoryResponse getHistory(@RequestParam int page, @RequestParam int pageSize) {
+        TransactionHistoryResponse response = new TransactionHistoryResponse();
+        try {
+            List<TransactionHistoryData> queryHistories = transferService.queryHistory(page, pageSize);
+            response.setTransactionHistoryDataList(queryHistories);
+            setSuccessMsg(response);
+        } catch (Exception e) {
+            log.error("Get history failed", e);
+            setErrorMsg(response);
+        }
         return response;
     }
 }

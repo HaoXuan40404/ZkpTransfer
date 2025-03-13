@@ -17,6 +17,9 @@ import com.webank.wedpr.zktransfer.repository.TransactionHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.webank.wedpr.crypto.zkp.ZkpDemo.concatBytesArray;
 
@@ -303,5 +307,20 @@ public class TransferService {
         response.setErrorCode(EnumResponseStatus.SUCCESS.getErrorCode());
         response.setMessage(EnumResponseStatus.SUCCESS.getMessage());
         return response;
+    }
+
+    public List<TransactionHistoryData> queryHistory(int page, int pageSize) {
+        // 分页查询history
+        Pageable pageable = PageRequest.of(page, pageSize);
+        Page<TransactionHistory> transactionHistories = transactionHistoryRepository.findAll(pageable);
+        return transactionHistories.getContent().stream()
+                .map(history -> new TransactionHistoryData(
+                        history.getBizSeq(),
+                        history.getOwner(),
+                        history.getValue(),
+                        history.getCommitment(),
+                        history.getCreateTime(),
+                        history.getTransType()))
+                .collect(Collectors.toList());
     }
 }
