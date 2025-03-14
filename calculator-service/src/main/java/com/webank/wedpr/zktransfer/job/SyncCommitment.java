@@ -82,6 +82,7 @@ public class SyncCommitment {
                 commitmentEntity.setStatus(commitmentStatus);
                 commitmentEntity.setKdfIndex(currentIndex);
                 commitmentEntity.setUpdateTime(timestamp);
+                commitmentEntity.setCreateTime(timestamp);
                 commitmentEntity.setCommitmentValue(value);
                 commitmentRepository.save(commitmentEntity);
             }

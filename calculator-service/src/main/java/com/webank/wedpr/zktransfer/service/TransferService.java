@@ -3,6 +3,7 @@ package com.webank.wedpr.zktransfer.service;
 import com.webank.wedpr.crypto.zkp.NativeInterface;
 import com.webank.wedpr.crypto.zkp.WedprException;
 import com.webank.wedpr.crypto.zkp.ZkpResult;
+import com.webank.wedpr.zktransfer.common.Utils;
 import com.webank.wedpr.zktransfer.entity.CommitmentEntity;
 import com.webank.wedpr.zktransfer.message.calculator.*;
 import com.webank.wedpr.zktransfer.message.coordinator.MintCommitmentRequest;
@@ -18,9 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -29,9 +28,15 @@ public class TransferService {
     @Autowired
     CommitmentRepository commitmentRepository;
 
+    @Autowired private  String agencyName;
+
     @Autowired private NativeInterface nativeInterface;
 
     @Autowired private byte[] servicePrivateKey;
+
+    // TODO: 记录初始化的状态 记录db 多活
+    private final Map<String, List<byte[]>> senderInitialPart = new HashMap<>();
+    private final Map<String, byte[]> receiverInitialPart = new HashMap<>();
 
 
     public MintCommitmentRequest deposit(DepositRequest request) throws NoSuchAlgorithmException, WedprException {
@@ -85,8 +90,8 @@ public class TransferService {
 
         // 遍历未花费的commitment，直到总金额大于等于请求的金额
         List<CommitmentEntity> selectedCommitments = new ArrayList<>();
-        List<byte[]> selectedCommitmentsBytes = new ArrayList<>();
         List<Integer> selectedValues = new ArrayList<>();
+        List<byte[]> selectedCommitmentsBytes = new ArrayList<>();
         for (CommitmentEntity commitmentEntity : unspentCommitments) {
             totalAmount += commitmentEntity.getCommitmentValue();
             selectedValues.add(commitmentEntity.getCommitmentValue());
@@ -104,19 +109,21 @@ public class TransferService {
         // 为选中的commitment生成proof
         List<byte[]> valueProofs = new ArrayList<>();
         List<byte[]> knowledgeProofs = new ArrayList<>();
+
         for (CommitmentEntity commitmentEntity : selectedCommitments) {
             byte[] indexBlinding = KeyDriveFunction.deriveKey(servicePrivateKey, commitmentEntity.getKdfIndex());
             byte[] valueProof = nativeInterface.proveValueEqualityRelationshipProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
             byte[] knowledgeProof = nativeInterface.proveKnowledgeProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
             valueProofs.add(valueProof);
             knowledgeProofs.add(knowledgeProof);
+//            selectedCommitmentsBytes.add(Hex.decode(commitmentEntity.getCommitment()));
         }
 
         // 构造ChainWithdrawRequest
         BurnCommitmentRequest burnCommitmentRequest = new BurnCommitmentRequest();
         burnCommitmentRequest.setAmountList(selectedValues);
         burnCommitmentRequest.setCommitmentsList(selectedCommitmentsBytes);
-        burnCommitmentRequest.setKnwoledProofsList(knowledgeProofs);
+        burnCommitmentRequest.setKnowledgeProofsList(knowledgeProofs);
         burnCommitmentRequest.setValueProofsList(valueProofs);
 
         // 调用coordinator的withdraw
@@ -139,7 +146,9 @@ public class TransferService {
     // 转账
     public TransferRecord transferInitiate(TransferRequest request)
             throws WedprException, NoSuchAlgorithmException {
-        String fromBank = request.getAgencyName();
+        // from一定是自己
+        String fromBank = agencyName;
+        String bizSeq = Utils.getUuid();
         String toBank = request.getReceiverBankInfo();
         int transferAmount = request.getSpendAmountList();
         log.info("Initiating transfer from {} to {} with amount {}", fromBank, toBank, transferAmount);
@@ -179,6 +188,10 @@ public class TransferService {
             selectedindexBlinding.add(indexBlinding);
             byte[] valueProof = nativeInterface.proveValueEqualityRelationshipProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
             byte[] knowledgeProof = nativeInterface.proveKnowledgeProof(commitmentEntity.getCommitmentValue(), indexBlinding).expectNoError().proof;
+//            log.info("knowledgeProof :{}, commitment: {}", Hex.toHexString(knowledgeProof), commitmentEntity.getCommitment());
+//            boolean knowledgeVerifyResult = nativeInterface.verifyKnowledgeProof(Hex.decode(commitmentEntity.getCommitment()), knowledgeProof).expectNoError().result;
+//            log.info("knowledgeVerifyResult :{}", knowledgeVerifyResult);
+
             valueProofs.add(valueProof);
             knowledgeProofs.add(knowledgeProof);
             //标记为pending状态
@@ -190,8 +203,12 @@ public class TransferService {
             selectedSetupPublicPartList.add(selectedSetupResult.publicPart);
             selectedSetupPrivatePartList.add(selectedSetupResult.privatePart);
         }
-
-
+        if(senderInitialPart.containsKey(bizSeq))
+        {
+            log.error("Sender initial part already exists, key {}", bizSeq);
+            throw new WedprException("Sender initial part already exists");
+        }
+        senderInitialPart.put(bizSeq, selectedSetupPrivatePartList);
 
         // 计算找零
         int changeAmount = totalAmount - transferAmount;
@@ -211,9 +228,16 @@ public class TransferService {
         byte[] changeCipher = AESUtils.encrypt(changeAmountBytes, servicePrivateKey);
         byte[] changeCommitment = nativeInterface.computeCommitment(changeAmount, changeIndexBlinding).expectNoError().commitment;
         byte[] changeProof = nativeInterface.proveValueEqualityRelationshipProof(changeAmount, changeIndexBlinding).expectNoError().proof;
+        byte[] rangeProof = nativeInterface.proveRangeProof(changeAmount, changeIndexBlinding).expectNoError().proof;
         //生成找零commitment的setupProof
         ZkpResult changeSetup = nativeInterface.receiverProveMultiSumRelationshipSetup(
                 changeAmount, changeIndexBlinding).expectNoError();
+        if(receiverInitialPart.containsKey(bizSeq))
+        {
+            log.error("Change initial part already exists, key {}", bizSeq);
+            throw new WedprException("Change initial part already exists");
+                }
+        receiverInitialPart.put(bizSeq, changeSetup.privatePart);
 
 
         // 保存找零commitment到数据库
@@ -235,11 +259,13 @@ public class TransferService {
         transferRequest.setReceiverAmount(transferAmount);
         transferRequest.setInputBalanceInitialShares(selectedSetupPublicPartList);
         transferRequest.setChangeBalanceInitialShare(changeSetup.publicPart);
+        transferRequest.setAgencyName(agencyName);
+        transferRequest.setBizSeq(bizSeq);
 
         // 设置 inputInfos (ChainWithdrawRequest)
         BurnCommitmentRequest inputInfos = new BurnCommitmentRequest();
         inputInfos.setValueProofsList(valueProofs);
-        inputInfos.setKnwoledProofsList(knowledgeProofs);
+        inputInfos.setKnowledgeProofsList(knowledgeProofs);
         inputInfos.setCommitmentsList(selectedCommitmentsBytes);
         inputInfos.setAmountList(selectedValues);
         transferRequest.setInputInfos(inputInfos);
@@ -251,6 +277,7 @@ public class TransferService {
         changeInfos.setViewKey(changeViewKey);
         changeInfos.setCipher(changeCipher);
         changeInfos.setAmount(changeAmount);
+        changeInfos.setRangeProof(rangeProof);
 
         transferRequest.setChangeInfos(changeInfos);
 
@@ -284,6 +311,15 @@ public class TransferService {
         // 生成commitment的proof 构造TransferReceiveResponse
         byte[] commitment = nativeInterface.computeCommitment(amount, indexBlinding).expectNoError().commitment;
         byte[] proof = nativeInterface.proveValueEqualityRelationshipProof(amount, indexBlinding).expectNoError().proof;
+        byte[] rangeProof = nativeInterface.proveRangeProof(amount, indexBlinding).expectNoError().proof;
+
+        ZkpResult receiverProofShare = nativeInterface.receiverProveMultiSumRelationshipSetup(amount, indexBlinding);
+        if(receiverInitialPart.containsKey(request.getBizSeq()))
+        {
+            log.error("Receiver initial part already exists, key {}", request.getBizSeq());
+            throw new WedprException("Receiver initial part already exists");
+        }
+        receiverInitialPart.put(request.getBizSeq(), receiverProofShare.privatePart);
 
 
         MintCommitmentRequest chainDepositRequest = new MintCommitmentRequest();
@@ -292,7 +328,7 @@ public class TransferService {
         chainDepositRequest.setAmount(amount);
         chainDepositRequest.setCipher(cipher);
         chainDepositRequest.setViewKey(viewKey);
-
+        chainDepositRequest.setRangeProof(rangeProof);
         TransferReceiveResponse transferReceiveResponse = new TransferReceiveResponse();
         transferReceiveResponse.setReceiveProof(chainDepositRequest);
 
@@ -312,8 +348,7 @@ public class TransferService {
         transferRecord.setRole("to");
         transferRecord.setReceiverBlinding(indexBlinding);
         transferRecord.setReceiverResponse(transferReceiveResponse);
-
-
+        transferRecord.getReceiverResponse().setBalanceInitialShare(receiverProofShare.publicPart);
         return transferRecord;
     }
 
@@ -322,27 +357,25 @@ public class TransferService {
             throws WedprException, NoSuchAlgorithmException {
 
         List<byte[]> senderSetupFinalPartList = new ArrayList<>();
+        List<byte[]> senderSetupSetupPartList = senderInitialPart.get(request.getBizSeq());
+        senderInitialPart.remove(request.getBizSeq());
 
         for (int i = 0; i < blindingList.size(); i++) {
-            ZkpResult selectedSetupResult = nativeInterface.senderProveMultiSumRelationshipSetup(
-                    valueList.get(i), blindingList.get(i)).expectNoError();
-
             ZkpResult senderFinalResult = nativeInterface.senderProveMultiSumRelationshipFinal(
-                    valueList.get(i), blindingList.get(i), selectedSetupResult.privatePart, request.getCheck()).expectNoError();
+                    valueList.get(i), blindingList.get(i), senderSetupSetupPartList.get(i), request.getCheck()).expectNoError();
             senderSetupFinalPartList.add(senderFinalResult.publicPart);
         }
 
         return senderSetupFinalPartList;
     }
 
-    public byte[] transferReceiverComplete(TransferCompleteRequest request, byte[] blinding, int value)
-            throws WedprException, NoSuchAlgorithmException {
+    public byte[] transferReceiverComplete(TransferCompleteRequest request, byte[] blinding)
+            throws WedprException {
 
-        ZkpResult receiverSetup = nativeInterface.receiverProveMultiSumRelationshipSetup(
-                value, blinding).expectNoError();
-
+        byte[] receiverSetup = receiverInitialPart.get(request.getBizSeq());
+        receiverInitialPart.remove(request.getBizSeq());
         byte[] receiverFinal = nativeInterface.receiverProveMultiSumRelationshipFinal(
-                blinding, receiverSetup.privatePart, request.getCheck()).expectNoError().publicPart;
+                blinding, receiverSetup, request.getCheck()).expectNoError().publicPart;
 
         return receiverFinal;
     }

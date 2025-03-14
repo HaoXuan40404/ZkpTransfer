@@ -6,6 +6,6 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper=false)
 @Data
-public class TransferStatusUpdateResponse {
+public class TransferStatusUpdateRequest {
     private byte[] commitment;
 }

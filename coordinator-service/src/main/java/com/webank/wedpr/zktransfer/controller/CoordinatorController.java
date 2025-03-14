@@ -70,25 +70,43 @@ public class CoordinatorController {
     }
 
     @PostMapping("/deposit")
-    public BaseResponse deposit(@Validated @RequestBody MintCommitmentRequest request) throws WedprException  {
+    public BaseResponse deposit(@Validated @RequestBody MintCommitmentRequest request)  {
         // 协调方先验证证明
-        BaseResponse response = transferService.deposit(request);
+        BaseResponse response = null;
+        try {
+            response = transferService.deposit(request);
+        } catch (WedprException e) {
+            log.error("deposit failed", e);
+            throw new RuntimeException(e);
+        }
         setSuccessMsg(response);
         return response;
     }
 
     @PostMapping("/withdraw")
-    public BaseResponse withdraw(@Validated @RequestBody BurnCommitmentRequest request) throws WedprException {
+    public BaseResponse withdraw(@Validated @RequestBody BurnCommitmentRequest request) {
         // 协调方先验证证明
-        BaseResponse response = transferService.withdraw(request);
+        BaseResponse response = null;
+        try {
+            response = transferService.withdraw(request);
+        } catch (WedprException e) {
+            log.error("withdraw failed", e);
+            throw new RuntimeException(e);
+        }
         setSuccessMsg(response);
         return response;
     }
 
 
     @PostMapping("/transfer")
-    public BaseResponse transfer(@Validated @RequestBody TransferCommitmentRequest request) throws WedprException {
-        BaseResponse response = transferService.transfer(request);
+    public BaseResponse transfer(@Validated @RequestBody TransferCommitmentRequest request) {
+        BaseResponse response = null;
+        try {
+            response = transferService.transfer(request);
+        } catch (WedprException e) {
+            log.error("transfer failed", e);
+            throw new RuntimeException(e);
+        }
         setSuccessMsg(response);
         return response;
     }

@@ -11,7 +11,7 @@ import com.webank.wedpr.zktransfer.message.calculator.*;
 import com.webank.wedpr.zktransfer.message.coordinator.MintCommitmentRequest;
 import com.webank.wedpr.zktransfer.message.coordinator.BurnCommitmentRequest;
 import com.webank.wedpr.zktransfer.message.coordinator.TransferCommitmentRequest;
-import com.webank.wedpr.zktransfer.message.coordinator.TransferStatusUpdateResponse;
+import com.webank.wedpr.zktransfer.message.coordinator.TransferStatusUpdateRequest;
 import com.webank.wedpr.zktransfer.service.CoordinatorClient;
 import com.webank.wedpr.zktransfer.service.TransferService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/wedpr/pls/")
 public class CalculatorController {
 
-    //记录交易和对应commitment
+    //记录交易和对应commitment TODO: 记录db 多活
     private final Map<String, TransferRecord> transferRecordMap = new HashMap<>();
 
     @Autowired
@@ -99,21 +99,23 @@ public class CalculatorController {
         try {
             TransferRecord transferRecord = transferService.transferInitiate(request);
             TransferCommitmentRequest chainTransferInitialRequest  = transferRecord.getSenderRequest();
-            setAgencyInfoWithUuid(chainTransferInitialRequest);
 
             transferRecordMap.put(chainTransferInitialRequest.getBizSeq(), transferRecord);
             // 调用协调服务的接口
-//            BaseResponse response = coordinatorClient.transfer(chainTransferInitialRequest);
-            BaseResponse response = new BaseResponse();
+            log.info("bizSeq: {}, transfer", chainTransferInitialRequest.getBizSeq());
+            BaseResponse response = coordinatorClient.transfer(chainTransferInitialRequest);
             //更新DB状态
+            log.info("bizSeq: {}, update db status", chainTransferInitialRequest.getBizSeq());
             for (int i = 0; i <chainTransferInitialRequest.getInputInfos().getCommitmentsList().size(); i++) {
                 transferService.updateCommitmentStatus(chainTransferInitialRequest.getInputInfos().getCommitmentsList().get(i), CommitmentStatus.Spent.getValue());
             }
             transferService.updateCommitmentStatus(chainTransferInitialRequest.getChangeInfos().getCommitment(), CommitmentStatus.Unspent.getValue());
 
             //TODO:删除mapping
+            setSuccessMsg(response);
             return response;
         } catch (Exception e) {
+            log.error("transfer error", e);
             throw new WedprException(e);
         }
 
@@ -125,10 +127,8 @@ public class CalculatorController {
         try {
             TransferRecord transferRecord = transferService.transferNotify(request);
             TransferReceiveResponse transferReceiveResponse = transferRecord.getReceiverResponse();
-            setAgencyInfoWithUuid(transferReceiveResponse);
-
-            transferRecordMap.put(transferReceiveResponse.getBizSeq(), transferRecord);
-
+            transferRecordMap.put(request.getBizSeq(), transferRecord);
+            setSuccessMsg(transferReceiveResponse);
             return transferReceiveResponse;
         } catch (Exception e) {
             throw new WedprException(e);
@@ -142,24 +142,30 @@ public class CalculatorController {
             TransferCompleteResponse response = new TransferCompleteResponse();
 
             TransferRecord record = transferRecordMap.get(request.getBizSeq());
+            // 检查记录是否存在以及角色是否有效
+            if (record == null) {
+                log.error("未找到对应的 TransferRecord 记录, bizSeq: {}", request.getBizSeq());
+                throw new WedprException("TransferRecord not found");
+            }
+            transferRecordMap.remove(request.getBizSeq());
+            log.info("TransferRecord: {}", record);
 
             // 检查记录是否存在以及角色是否有效
             if (record == null) {
-                log.info("未找到对应的 TransferRecord 记录，bizSeq: {}", request.getBizSeq());
+                log.info("未找到对应的 TransferRecord 记录, bizSeq: {}", request.getBizSeq());
             } else if ("from".equals(record.getRole())) {
-                List<byte[]> senderPart = transferService.transferSenderComplete(request, transferRecordMap.get(request.getBizSeq()).getSenderBlinding(), transferRecordMap.get(request.getBizSeq()).getSenderRequest().getInputInfos().getAmountList());
-                byte[] receiverPart = transferService.transferReceiverComplete(request, transferRecordMap.get(request.getBizSeq()).getReceiverBlinding(), transferRecordMap.get(request.getBizSeq()).getSenderRequest().getChangeInfos().getAmount());
+                List<byte[]> senderPart = transferService.transferSenderComplete(request,record.getSenderBlinding(), record.getSenderRequest().getInputInfos().getAmountList());
+                byte[] receiverPart = transferService.transferReceiverComplete(request, record.getReceiverBlinding());
 
                 response.setInputRelationShipProofShare(senderPart);
                 response.setOutputRelationShipProofShare(receiverPart);
             } else if ("to".equals(record.getRole())) {
-                byte[] receiverPart = transferService.transferReceiverComplete(request, transferRecordMap.get(request.getBizSeq()).getReceiverBlinding(), transferRecordMap.get(request.getBizSeq()).getReceiverResponse().getReceiveProof().getAmount());
+                byte[] receiverPart = transferService.transferReceiverComplete(request, record.getReceiverBlinding());
                 response.setOutputRelationShipProofShare(receiverPart);
             } else {
                 log.error("未知的 role 类型: {}，bizSeq: {}", record.getRole(), request.getBizSeq());
             }
-
-            response.setBizSeq(request.getBizSeq());
+            setSuccessMsg(response);
             return response;
         } catch (Exception e) {
             throw new WedprException(e);
@@ -167,12 +173,14 @@ public class CalculatorController {
     }
 
     @PostMapping("/transferStatusUpdate")
-    public void transferStatusUpdate(
-            @Validated @RequestBody TransferStatusUpdateResponse request) throws WedprException {
+    public BaseResponse transferStatusUpdate(
+            @Validated @RequestBody TransferStatusUpdateRequest request) throws WedprException {
         try {
             //TODO:删除mapping
             transferService.updateCommitmentStatus(request.getCommitment(), CommitmentStatus.Unspent.getValue());
-
+            BaseResponse response = new BaseResponse();
+            setSuccessMsg(response);
+            return response;
         } catch (Exception e) {
             throw new WedprException(e);
         }

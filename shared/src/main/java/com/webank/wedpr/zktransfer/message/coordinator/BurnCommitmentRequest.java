@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class BurnCommitmentRequest extends BaseRequest {
     private List<byte[]> valueProofsList;
-    private List<byte[]> knwoledProofsList;
+    private List<byte[]> knowledgeProofsList;
     private List<byte[]> commitmentsList;
     private List<Integer> amountList;
 }
