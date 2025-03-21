@@ -4,11 +4,10 @@ dirpath="$(cd "$(dirname "$0")" && pwd)"
 cd $dirpath
 
 # JAVA_HOME="/nemo/jdk8"
-APP_MAIN=com.webank.wedpr.zktransfer.PpcIssApplication
+APP_MAIN=com.webank.wedpr.zktransfer.CalculatorApplication
 CLASSPATH='conf/:app/*:libs/*'
 CURRENT_DIR=`pwd`
-LOG_DIR=/data/app/logs/ppcs-modeladm
-#LOG_DIR=${CURRENT_DIR}/logs
+LOG_DIR=${CURRENT_DIR}/logs
 CONF_DIR=${CURRENT_DIR}/conf
 os_platform=`uname -s`
 
@@ -24,14 +23,30 @@ mkdir -p logs
 tradePortalPID=0
 start_timestamp=0
 
+
 getTradeProtalPID(){
-    javaps=`$JAVA_HOME/bin/jps -l | grep $APP_MAIN`
+    tradePortalPID=0
+    # 获取进程命令行中含APP_MAIN和当前路径的进程（关键改进）
+    javaps=$(ps -ef | grep "$APP_MAIN" | grep -F "$CURRENT_DIR" | grep -v grep)
+    
     if [ -n "$javaps" ]; then
-        tradePortalPID=`echo $javaps | awk '{print $1}'`
-    else
-        tradePortalPID=0
+        # 精准提取PID（兼容多实例场景）
+        tradePortalPID=$(echo "$javaps" | awk '{print $2}')
+        # 验证进程是否真实存在
+        if ! ps -p $tradePortalPID > /dev/null 2>&1 ; then
+            tradePortalPID=0
+        fi
     fi
 }
+
+# getTradeProtalPID(){
+#     javaps=`$JAVA_HOME/bin/jps -l | grep $APP_MAIN`
+#     if [ -n "$javaps" ]; then
+#         tradePortalPID=`echo $javaps | awk '{print $1}'`
+#     else
+#         tradePortalPID=0
+#     fi
+# }
 
 JAVA_OPTS=" -Dfile.encoding=UTF-8"
 JAVA_OPTS+=" -Djava.security.egd=file:/dev/./urandom"
@@ -62,7 +77,7 @@ function waiting_for_start() {
         do
             printf "%c%c%c%c%c Waiting for server started %c%c%c%c%c\r" \
             "$j" "$j" "$j" "$j" "$j" "$j" "$j" "$j" "$j" "$j"
-            check_time=$(cat ${LOG_DIR}/ppcs-modeladm-sync.log | grep -a "JVM running for" | tail -n1 | awk -F "]" '{print $2}' | awk -F "[" '{print $2}' | awk -F " " '{print $1, $2}')
+            check_time=$(cat ${LOG_DIR}/calculator.log | grep -a "process running" | tail -n1 | awk -F "]" '{print $2}' | awk -F "[" '{print $2}' | awk -F " " '{print $1, $2}')
             if [ -n "$check_time" ]; then
                 if [[ "${os_platform}" = "Darwin" ]];then
                     timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "${check_time}" +%s)
@@ -80,8 +95,8 @@ function waiting_for_start() {
                     echo -e "\033[32m[INFO] Server start Successful!\033[0m"
                     echo "(PID=$tradePortalPID)...[Success]"
                     echo "==============================================================================================="
-                    rm -rf logs
-                    ln -s ${LOG_DIR} logs
+#                    rm -rf logs
+#                    ln -s ${LOG_DIR} logs
                     exit 0
                 fi
             fi
