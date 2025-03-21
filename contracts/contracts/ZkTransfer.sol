@@ -1,7 +1,6 @@
 pragma solidity ^0.8.10;
-// import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+
 import "./ZkpPrecompiled.sol";
-import "./IERC20.sol";
 
 contract ZkTransfer {
     // using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -13,7 +12,7 @@ contract ZkTransfer {
     }
 
     ZkpPrecompiled zkp;
-    IERC20 token;
+    address private deployer;
     
     // r = kdf(sk, index)
     // commitment(vG+rH)到 status
@@ -22,9 +21,12 @@ contract ZkTransfer {
     // viewkey到noteCipher
     mapping(bytes => bytes) private noteSet;
 
-    constructor(address erc20) public {
+    event CommitmentAdded(bytes commitment, bytes viewKey, bytes cipher);
+    event CommitmentRemoved(bytes commitment);
+
+    constructor() {
         zkp = ZkpPrecompiled(address(0x5100));
-        token = IERC20(erc20);
+        deployer = msg.sender; // Set the deployer as the owner
     }
 
     function concat(bytes[] memory data) internal pure returns (bytes memory) {
@@ -62,7 +64,7 @@ contract ZkTransfer {
         // 如果 commitment 不存在才添加
         commitmentSet[commitment] = CommitmentStatus.Unspent;
         noteSet[viewKey] = cipher;
-        
+        emit CommitmentAdded(commitment, viewKey, cipher); // Emit event
     }
 
     function removeCommitment(bytes memory commitment) internal {
@@ -72,36 +74,16 @@ contract ZkTransfer {
         );
         // 如果 commitment 存在才删除
         commitmentSet[commitment] = CommitmentStatus.Spent;
+        emit CommitmentRemoved(commitment); // Emit event
     }
 
     // mint
     function mint(
-        bytes memory proof,
         bytes memory commitment,
         bytes memory viewKey,
-        bytes memory cipher,
-        uint64 value
+        bytes memory cipher
     ) public {
-        // 1. 先检查用户是否有足够的代币余额
-        require(token.balanceOf(msg.sender) >= value, "Insufficient balance");
-
-        // 2. 验证金额和commitment相等 (提前验证可以节省gas)
-        require(
-            zkp.verifyValueEqualityProofWithoutBasePoint(
-                value,
-                commitment,
-                proof
-            ),
-            "Value equality proof verification failed"
-        );
-        // 3. 先做授权检查
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        require(allowance >= value, "Insufficient allowance");
-
-        // 4. 转账操作
-        bool success = token.transferFrom(msg.sender, address(this), value);
-        require(success, "Token transfer failed");
-
+        require(msg.sender == deployer, "Caller is not deployer");
         // 5. 记录 commitment
         addCommitment(commitment, viewKey, cipher);
 
@@ -166,28 +148,24 @@ contract ZkTransfer {
 
     // burn
     function burn(
-        bytes[] memory proof,
-        bytes memory commitment,
-        uint64 value,
-        address account
+        bytes memory proof,
+        bytes memory commitment
     ) public {
+        require(msg.sender == deployer, "Caller is not deployer");
         require(commitmentSet[commitment] == CommitmentStatus.Unspent, "commitment not exist");
-        removeCommitment(commitment);
-        // 1. 验证金额和commitment相等
-        require(
-            zkp.verifyValueEqualityProofWithoutBasePoint(
-                value,
-                commitment,
-                proof[0]
-            ),
-            "Value equality proof verification failed"
-        );
         // 2. 验证所有权
         require(
-            zkp.verifyKnowledgeProofWithoutBasePoint(commitment, proof[1]),
+            zkp.verifyKnowledgeProofWithoutBasePoint(commitment, proof),
             "verifyKnowledgeProof failed"
         );
-        // token.transferFrom(address(this), account, value);
-        token.transfer(account, value);
+        removeCommitment(commitment);
+    }
+
+    function queryNoteSetCipherByKey(bytes memory queryKey) public view returns (bytes memory) {
+        return noteSet[queryKey];
+    }
+
+    function queryCommitmentStatus(bytes memory commitment) public view returns (CommitmentStatus) {
+        return commitmentSet[commitment];
     }
 }

@@ -1,116 +1,108 @@
-apply plugin: 'java'
-//apply plugin: 'maven'
-apply plugin: 'idea'
-//apply plugin: 'eclipse'
-
-[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
-
-def springboot_version = "3.2.0"
-
-List springboot = [
-        "org.springframework.boot:spring-boot-starter-web:$springboot_version",
-        "org.springframework.boot:spring-boot-starter-aop:$springboot_version",
-        "org.springframework.boot:spring-boot-starter-validation:$springboot_version",
-        "org.springframework.boot:spring-boot-starter-data-jpa:$springboot_version",
-        "org.springframework.boot:spring-boot-starter-log4j2:$springboot_version"
-]
-
-repositories {
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
-    maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
-    mavenCentral()
-}
-
-dependencies {
-    implementation 'org.jetbrains:annotations:20.1.0'
-    implementation springboot
-    implementation 'io.springfox:springfox-boot-starter:3.0.0'
-    implementation 'org.springframework.retry:spring-retry:1.3.3'
-    implementation 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
-    implementation('org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:3.2.0') { exclude group: "org.slf4j" }
-    implementation 'com.mysql:mysql-connector-j:8.2.0'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.yaml:snakeyaml:2.0'
-    implementation 'net.minidev:json-smart:2.4.9'
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'commons-io:commons-io:2.7'
-    implementation 'junit:junit:4.13.1'
-    implementation 'com.jayway.jsonpath:json-path:2.9.0'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.18'
-
-
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'org.slf4j:slf4j-api:1.7.36'
+buildscript {
+    ext {
+        springBootVersion = '3.2.0'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
-tasks.withType(Copy).all {
-    duplicatesStrategy 'exclude'
-}
-
-configurations.all {
-    exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
-    exclude group: "org.slf4j", module: "slf4j-log4j12"
-}
-
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/java'
-        }
-        resources {
-            srcDir 'src/main/resources'
-        }
-    }
-    test {
-        java {
-            srcDir "src/test/java"
-        }
-        resources {
-            srcDir "src/test/resources"
-        }
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 }
 
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
 
-jar {
-    destinationDir file('dist/app')
-    archiveName project.name + "-" + project.version + '.jar'
-    exclude '**/*.yml'
-    exclude '**/*.xml'
-    exclude '**/*.properties'
-    exclude '**/*.crt'
-    exclude '**/*.key'
-    exclude '**/*.pem'
-    exclude '**/*.p12'
+    [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 
-    doLast {
-        copy {
-            from file('src/main/resources/conf/')
-            into 'dist/conf'
+    repositories {
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+    }
+
+    dependencies {
+        implementation 'org.jetbrains:annotations:20.1.0'
+        implementation 'org.projectlombok:lombok:1.18.24'
+        annotationProcessor 'org.projectlombok:lombok:1.18.24'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.18'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force 'org.slf4j:slf4j-api:1.7.36'
+//            force 'org.apache.logging.log4j:log4j-api:2.17.1'
+//            force 'org.apache.logging.log4j:log4j-core:2.17.1'
         }
-        copy {
-            from file('src/main/resources/').listFiles().findAll { File f -> (f.name.endsWith('.properties') || f.name.endsWith('.xml')) }
-            into 'dist/conf'
+    }
+
+    tasks.withType(Copy).all {
+        duplicatesStrategy 'exclude'
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/main/java'
+            }
+            resources {
+                srcDir 'src/main/resources'
+            }
         }
-        copy {
-            from configurations.runtimeClasspath
-            into 'dist/libs'
+        test {
+            java {
+                srcDir "src/test/java"
+            }
+            resources {
+                srcDir "src/test/resources"
+            }
         }
-        copy {
-            from file('script/')
-            into 'dist/'
-        }
-        copy {
-            from file('account')
-            into 'dist/account'
+    }
+
+    jar {
+        destinationDir file('dist/app')
+        archiveName project.name + "-" + project.version + '.jar'
+        exclude '**/*.yml'
+        exclude '**/*.xml'
+        exclude '**/*.properties'
+        exclude '**/*.crt'
+        exclude '**/*.key'
+        exclude '**/*.pem'
+        exclude '**/*.p12'
+
+        doLast {
+            copy {
+                from file('src/main/resources/conf/')
+                into 'dist/conf'
+            }
+            copy {
+                from file('src/main/resources/').listFiles().findAll { File f -> (f.name.endsWith('.properties') || f.name.endsWith('.xml')) }
+                into 'dist/conf'
+            }
+            copy {
+                from configurations.runtimeClasspath
+                into 'dist/libs'
+            }
+            copy {
+                from file('script/')
+                into 'dist/'
+            }
+            copy {
+                from file('account')
+                into 'dist/account'
+            }
         }
     }
 }
-
